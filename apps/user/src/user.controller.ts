@@ -41,6 +41,7 @@ class UserController extends Controller {
   profile: RequestHandler = async (req, res, next) => {
     try {
       const { email } = res.locals;
+      
       const data = await userService.profile(email);
       if (data instanceof AppError || data instanceof Error) return next(data);
 

@@ -3,7 +3,7 @@ import { string, z } from 'zod';
 const LoginDTO = z
   .object({
     email: z.string().email(),
-    password: z.string().min(8),
+    password: z.string().min(6),
   })
   .strict();
 
@@ -13,8 +13,8 @@ const User = z.object({
 
 const UpdatePasswordDTO = z
   .object({
-    oldPassword: z.string(),
-    newPassword: z.string(),
+    oldPassword: z.string().min(6),
+    newPassword: z.string().min(6),
   })
   .strict();
 

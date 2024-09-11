@@ -39,47 +39,66 @@ class UserService {
   };
 
   register = async (user: IUser, isAdmin = false) => {
-    const existingUSer = await this.checkUser(user.email);
-    if (existingUSer)
-      return new AppError('Account exist', HttpStatus.HTTP_CONFLICT);
+    try {
+      const existingUSer = await this.checkUser(user.email);
+      if (existingUSer)
+        return new AppError('Account exist', HttpStatus.HTTP_CONFLICT);
 
-    const hash = await this.encryptPassword(user.password);
+      const hash = await this.encryptPassword(user.password);
 
-    const newUser = new User({ ...user, password: hash, isAdmin });
-    const payload = {
-      id: newUser.id,
-      email: user.email,
-      name: user.name,
-      isAdmin,
-    };
+      const newUser = new User({ ...user, password: hash, isAdmin });
+      const payload = {
+        id: newUser.id,
+        email: user.email,
+        name: user.name,
+        isAdmin,
+      };
 
-    const data = await Promise.all([newUser.save(), this.genToken(payload)]);
-    return {
-      user: { name: newUser.name, email: newUser.email },
-      token: data[1],
-    };
+      const data = await Promise.all([newUser.save(), this.genToken(payload)]);
+      return {
+        user: { name: newUser.name, email: newUser.email },
+        token: data[1],
+      };
+    } catch (error) {
+      return error;
+    }
   };
 
   profile = async (email: string) => {
-    const user = await this.checkUser(email);
-    delete user.password;
-    return user;
+    try {
+      const user = await this.checkUser(email);
+      return { name: user.name, email: user.email };
+    } catch (error) {
+      return error;
+    }
   };
 
   updateUser = async (name: string, id: string) => {
-    return await User.findByIdAndUpdate(id, { name });
+    try {
+      return await User.findByIdAndUpdate(id, { name });
+    } catch (error) {
+      return error;
+    }
   };
 
   updatePassword = async (data: IUpdatePassword) => {
-    const user = await this.checkUser(data.email);
-    const verifyOldPassword = await this.comparePassword(
-      data.oldPassword,
-      user.password
-    );
-    if (!verifyOldPassword) return wrongCredentials();
+    try {
+      const user = await this.checkUser(data.email);
+      const verifyOldPassword = await this.comparePassword(
+        data.oldPassword,
+        user.password
+      );
+      if (!verifyOldPassword)
+        return new AppError(
+          'Password cannot be updated',
+          HttpStatus.HTTP_UNAUTHORIZED
+        );
 
-    const hash = await this.encryptPassword(data.newPassword);
-    return await User.findByIdAndUpdate(user.id, { password: hash });
+      const hash = await this.encryptPassword(data.newPassword);
+      return await User.findByIdAndUpdate(user.id, { password: hash });
+    } catch (error) {
+      return error;
+    }
   };
 
   /**

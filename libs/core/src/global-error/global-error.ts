@@ -28,14 +28,6 @@ const handleValidationErrorDB = (err: any) => {
   });
 };
 
-const handleFirebaseError = (message: string) => {
-  return new AppError(
-    'Error authenticating user',
-    HttpStatus.HTTP_UNAUTHORIZED,
-    { message }
-  );
-};
-
 /** ======DEVELOPMENT ERROR HANLDER ======= */
 /* A function that takes in an error, a request, and a response and formats the error messages. */
 const sendErrorDev = (err: AppError, req: Request, res: Response) => {
@@ -45,6 +37,13 @@ const sendErrorDev = (err: AppError, req: Request, res: Response) => {
     message: err.message,
     stack: err.stack,
   });
+};
+
+const handleZodError = (err: any) => {
+  const formmatedMsg = err.issues.map(
+    (el: { path: string; message: string }) => `${el.path[0]} - ${el.message}`
+  );
+  return new AppError(`Validation Error - ${formmatedMsg.join('. ')}`, 422);
 };
 
 /** ======PRODUCTION ERROR HANLDER ======= */
@@ -85,10 +84,9 @@ export default function (
     //send 500 error status to email
     error.stack = err.stack;
 
+    if (error.name === 'ZodError') error = handleZodError(error);
     if (error.name === 'CastError') error = handleCastErrorDB(error);
     if (error.code === 11000) error = handleDuplicateFieldsDB(error);
-    if (error.message.includes('Firebase'))
-      error = handleFirebaseError(error.message);
     if (error.name === 'ValidationError')
       error = handleValidationErrorDB(error);
 

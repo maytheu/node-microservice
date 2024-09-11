@@ -6,21 +6,16 @@ import * as path from 'path';
 import { userValidate } from './user.validate';
 import { MongoConnect } from '@app/core';
 import { seedAdmin } from './user.seed';
+import App from './user.app';
 
-const app = express();
-
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
-
-app.get('/api/user', (req, res) => {
-  res.send({ message: 'Welcome to user!' });
-});
+const app = App.app;
 
 const port = userValidate.PORT;
 
 const startServer = async () => {
   await MongoConnect.connectMongo(userValidate.MONGO_URL);
   await seedAdmin();
-  app.listen(port, () => console.log(`Server started on port ${port}`));
+  app.listen(port, () => console.log(`User Service started on port ${port}`));
 };
 
 startServer();
