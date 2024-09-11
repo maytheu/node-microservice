@@ -6,6 +6,7 @@ const productSchema = new Schema(
     quantity: { type: Number, required: true },
     price: { type: Number, required: true },
     image: String,
+    isDeleted: { type: Boolean, default: false },
   },
   {
     timestamps: true,
