@@ -16,7 +16,6 @@
     "baseUrl": ".",
     "paths": {
       "@app/core": ["libs/core/src/index.ts"],
-      "@app/error": ["libs/error/src/index.ts"],
       "@app/event": ["libs/event/src/index.ts"],
     }
   },

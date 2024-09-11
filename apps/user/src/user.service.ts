@@ -2,9 +2,9 @@ import User from './user.model';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { userValidate } from './user.validate';
-import { AppError, wrongCredentials } from '@app/error';
+// import { AppError, wrongCredentials } from '@app/error';
 import { ILogin, IUpdatePassword, IUser } from './user.types';
-import { HttpStatus } from '@app/core';
+import { AppError, HttpStatus, wrongCredentials } from '@app/core';
 
 interface Payload {
   email: string;

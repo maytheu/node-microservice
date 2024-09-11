@@ -2,11 +2,10 @@
  * @author Maytheu<maytheu98@gmail.com>
  * @description - generic error methods
  */
-// import { HttpStatus } from '@app/core';
-import { AppError } from '@app/error';
+import { AppError, HttpStatus } from '@app/core';
 
 export const notFoundError = (error: string) => {
-  return new AppError(`${error} not found`, 404, {
+  return new AppError(`${error} not found`, HttpStatus.HTTP_NOT_FOUND, {
     message: `The selected ${error} cannot be found`,
   });
 };
@@ -14,6 +13,6 @@ export const notFoundError = (error: string) => {
 export const wrongCredentials = () => {
   return new AppError(
     'Login credentials do not match',
-    401
+    HttpStatus.HTTP_UNAUTHORIZED
   );
 };

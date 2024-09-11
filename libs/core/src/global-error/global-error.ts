@@ -3,8 +3,7 @@
  * @description handles custom error, prod and dev error
  */
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '@app/error';
-import { HttpStatus, validate } from '@app/core';
+import { AppError, HttpStatus, validate } from '@app/core';
 
 const handleCastErrorDB = (err: any) => {
   const message = `Invalid ${err.path}: ${err.value}.`;

@@ -7,7 +7,7 @@ import {
   UpdateProfileDTO,
 } from './user.types';
 import userService from './user.service';
-import { AppError } from '@app/error';
+import { AppError } from '@app/core';
 
 class UserController extends Controller {
   login: RequestHandler = async (req, res, next) => {
