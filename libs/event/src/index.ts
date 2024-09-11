@@ -1,1 +1,1 @@
-export * from './lib/event';
+export * from './rmq-server';

@@ -3,19 +3,25 @@
  * This is only a minimal backend to get started.
  */
 
-import express from 'express';
+import 'dotenv/config';
 import * as path from 'path';
 import { productValidate } from './product.validate';
 import { MongoConnect } from '@app/core';
 import App from './product.app';
+import { RmqConnection } from '@app/event';
+import { handleIncomingProductQueue } from './product.consume';
 
-const app = App.app
+const app = App.app;
 
 const port = productValidate.PORT;
 
 const startServer = async () => {
   await MongoConnect.connectMongo(productValidate.MONGO_URL);
-  app.listen(port, () => console.log(`Server started on port ${port}`));
+  await RmqConnection.connect();
+  await RmqConnection.consume('PRODUCT', handleIncomingProductQueue);
+  app.listen(port, () =>
+    console.log(`Product service started on port ${port}`)
+  );
 };
 
 startServer();

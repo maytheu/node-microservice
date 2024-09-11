@@ -1,7 +1,7 @@
 /** @author Maytheu<maytheu98@gmail.com>
  * @description Server entry file for user service
  */
-import express from 'express';
+import 'dotenv/config';
 import * as path from 'path';
 import { userValidate } from './user.validate';
 import { MongoConnect } from '@app/core';

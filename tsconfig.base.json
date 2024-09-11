@@ -16,7 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@app/core": ["libs/core/src/index.ts"],
-      "@app/event": ["libs/event/src/index.ts"],
+      "@app/event": ["libs/event/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

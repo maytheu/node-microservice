@@ -4,6 +4,7 @@ import { IProduct, IProductQuery } from './product.types';
 import { AppError, HttpStatus, notFoundError } from '@app/core';
 import { productValidate } from './product.validate';
 import { v2 as cloudinary } from 'cloudinary';
+import { RmqConnection } from '@app/event';
 
 cloudinary.config({
   cloud_name: productValidate.CLOUDINARY_CLOUD,
@@ -76,15 +77,27 @@ class ProductService {
   };
 
   product = async (id: string) => {
-    if (!isValidObjectId(id)) return notFoundError('Product');
-
-    return Product.findById(id, '-isDeleted');
+    try {
+      if (!isValidObjectId(id)) {
+        const e = notFoundError('Product');
+        RmqConnection.sendToQueue('CART', e);
+        return e;
+      }
+      const product = await Product.findById(id, '-isDeleted');
+      RmqConnection.sendToQueue('CART', product);
+      return product;
+    } catch (error) {
+      RmqConnection.sendToQueue('CART', error);
+      return error;
+    }
   };
 
   productIds = async (ids: string[]) => {
     try {
-      return await Product.find({ _id: { $in: ids } }, '-isDeleted');
+      const products = await Product.find({ _id: { $in: ids } }, '-isDeleted');      
+      return RmqConnection.sendToQueue('VIEW_CART', products);
     } catch (error) {
+      RmqConnection.sendToQueue('VIEW_CART', error);
       return error;
     }
   };

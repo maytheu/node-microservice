@@ -82,7 +82,10 @@ class ProductController extends Controller {
 
       const productLimit = +limit || 10;
       const productPage = +page || 1;
-      const query = { name: `${name}`, description: `${description}` };
+      const query = {
+        name: name && `${name}`,
+        description: description && `${description}`,
+      };
       const price_quantity = `${filter}`;
 
       const data = await productService.allProduct(
@@ -117,7 +120,7 @@ class ProductController extends Controller {
         if (fields.price.length) product.price = +fields.price[0];
 
         //check for valid image
-        if (Object.keys(files).length > 0 || ('image' in files))
+        if (Object.keys(files).length > 0 || 'image' in files)
           product.image = this.formidableFileImages(files)[0].filepath;
 
         const data = await productService.updateProduct(product, id);
