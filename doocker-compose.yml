@@ -1,0 +1,83 @@
+version: '3.8'
+services:
+  order:
+    container_name: order
+    build:
+      context: ./
+      dockerfile: ./apps/order/DOCKERFILE
+    ports:
+      - 3001:3001
+    env_file:
+      - .env
+      - ./apps/order/.env
+    depends_on:
+      - product
+      - mongo
+      - rabbitmq
+
+  payment:
+    container_name: payment
+    build:
+      context: ./
+      dockerfile: ./apps/payment/DOCKERFILE
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+      - ./apps/payment/.env
+    depends_on:
+      - order
+      - product
+      - mongo
+      - rabbitmq
+
+  product:
+    container_name: product
+    build:
+      context: ./
+      dockerfile: ./apps/product/DOCKERFILE
+    ports:
+      - 3002:3002
+    env_file:
+      - .env
+      - ./apps/product/.env
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  user:
+    container_name: user
+    build:
+      context: ./
+      dockerfile: ./apps/user/DOCKERFILE
+    ports:
+      - 3003:3003
+    env_file:
+      - .env
+      - ./apps/user/.env
+    depends_on:
+      - mongo
+
+  mongo:
+    container_name: mongo
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongo-data:/data/db
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+volumes:
+  mongo-data:

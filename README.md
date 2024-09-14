@@ -17,7 +17,7 @@ This micro service app is bootstap with
  
  Copy sample.env to env
 
-Install dependency with
+Install dependency 
 
  `npm i`
 
@@ -26,5 +26,11 @@ Install dependency with
  `npx nx serve [service]`
 
  
+## Install with Docker
 
+Copy sample.env to .env
+
+Run docker compose
+
+The four service should run on expose ports
  

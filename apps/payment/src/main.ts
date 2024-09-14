@@ -9,7 +9,6 @@ import App from './payment.app'
 import { paymentValidate } from './payment.validation';
 import { MongoConnect } from '@app/core';
 import { RmqConnection } from '@app/event';
-import { handleIncomingPaymentQueue } from './payment.event';
 
 const app = App.app;
 
@@ -18,7 +17,6 @@ const port = paymentValidate.PORT;
 const startServer = async () => {
   await MongoConnect.connectMongo(paymentValidate.MONGO_URL);
   await RmqConnection.connect()
-  await RmqConnection.consume('PAYMENT', handleIncomingPaymentQueue)
   app.listen(port, () => console.log(`Payment Service started on port ${port}`));
 };
 
