@@ -10,6 +10,7 @@ import { MongoConnect } from '@app/core';
 import { orderValidate } from './order.validate';
 import { RmqConnection } from '@app/event';
 import { handleIncomingOrderQueue } from './order.event';
+import orderJob from './order.job';
 
 const app = App.app;
 
@@ -18,6 +19,7 @@ const port = orderValidate.PORT;
 const startServer = async () => {
   await MongoConnect.connectMongo(orderValidate.MONGO_URL);
   await RmqConnection.connect()
+  await orderJob.performJob.start()
   await RmqConnection.consume('ORDER', handleIncomingOrderQueue)
   app.listen(port, () => console.log(`Order Service started on port ${port}`));
 };
