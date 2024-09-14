@@ -34,3 +34,6 @@ Run docker compose
 
 The four service should run on expose ports
  
+ ## Documentation
+
+ Find the documentation /api/v1/user/docs
