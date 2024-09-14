@@ -9,7 +9,7 @@ import App from './order.app';
 import { MongoConnect } from '@app/core';
 import { orderValidate } from './order.validate';
 import { RmqConnection } from '@app/event';
-import { handleIncomingOrderQueue } from './order.consume';
+import { handleIncomingOrderQueue } from './order.event';
 
 const app = App.app;
 
@@ -19,7 +19,7 @@ const startServer = async () => {
   await MongoConnect.connectMongo(orderValidate.MONGO_URL);
   await RmqConnection.connect()
   await RmqConnection.consume('ORDER', handleIncomingOrderQueue)
-  app.listen(port, () => console.log(`User Service started on port ${port}`));
+  app.listen(port, () => console.log(`Order Service started on port ${port}`));
 };
 
 startServer();

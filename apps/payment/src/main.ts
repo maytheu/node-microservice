@@ -2,20 +2,24 @@
  * This is not a production server yet!
  * This is only a minimal backend to get started.
  */
-
+import 'dotenv/config';
 import express from 'express';
 import * as path from 'path';
+import App from './payment.app'
+import { paymentValidate } from './payment.validation';
+import { MongoConnect } from '@app/core';
+import { RmqConnection } from '@app/event';
+import { handleIncomingPaymentQueue } from './payment.event';
 
-const app = express();
+const app = App.app;
 
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
+const port = paymentValidate.PORT;
 
-app.get('/api', (req, res) => {
-  res.send({ message: 'Welcome to payment!' });
-});
+const startServer = async () => {
+  await MongoConnect.connectMongo(paymentValidate.MONGO_URL);
+  await RmqConnection.connect()
+  await RmqConnection.consume('PAYMENT', handleIncomingPaymentQueue)
+  app.listen(port, () => console.log(`Payment Service started on port ${port}`));
+};
 
-const port = process.env.PORT || 3333;
-const server = app.listen(port, () => {
-  console.log(`Listening at http://localhost:${port}/api`);
-});
-server.on('error', console.error);
+startServer();

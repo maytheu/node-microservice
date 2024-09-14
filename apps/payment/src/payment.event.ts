@@ -1,4 +1,4 @@
-export const handleIncomingOrderQueue = (data: string) => {
+export const handleIncomingPaymentQueue = (data: string) => {
     try {
       const parsedData = JSON.parse(data);
   

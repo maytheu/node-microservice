@@ -94,7 +94,7 @@ class ProductService {
 
   productIds = async (ids: string[]) => {
     try {
-      const products = await Product.find({ _id: { $in: ids } }, '-isDeleted');      
+      const products = await Product.find({ _id: { $in: ids } }, '-isDeleted');
       return RmqConnection.sendToQueue('VIEW_CART', products);
     } catch (error) {
       RmqConnection.sendToQueue('VIEW_CART', error);
@@ -119,6 +119,20 @@ class ProductService {
       }
       return await Product.findByIdAndUpdate(id, { data }, { new: true });
     } catch (error) {
+      return error;
+    }
+  };
+
+  updateProductPayment = async (
+    data: { productId: string; quantity: number }[]
+  ) => {
+    try {
+      return data.forEach(async (el) => {
+        await Product.findByIdAndUpdate(el.productId, {
+          $inc: { quantity: el.quantity },
+        });
+      });
+    } catch (error) { 
       return error;
     }
   };

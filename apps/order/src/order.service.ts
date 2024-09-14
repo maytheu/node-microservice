@@ -5,11 +5,14 @@ import {
   PAYMENT,
   PRODUCT,
   PRODUCTS,
+  Queue,
   RmqConnection,
   UPDATE_PRODUCT,
+  UPDATE_PRODUCT_PAYMENT,
 } from '@app/event';
 import { IPlaceOrder, IUpdateOrder } from './order.types';
-import { it } from 'node:test';
+import { date } from 'zod';
+import { error } from 'console';
 
 class OrderService {
   addToCart = async (data: IPlaceOrder) => {
@@ -19,54 +22,35 @@ class OrderService {
         action: PRODUCT,
       });
 
-      const result = new Promise((resolve, reject) => {
-        const consumerTag = `consumer_${data.userId}_${Date.now()}`;
+      const product = await this.handleConsumer('CART', data.userId);
+      if (product?.statusCode) throw product;
 
-        RmqConnection.consume('CART', async (product) => {
-          try {
-            const parsedData = JSON.parse(product);
-            if (parsedData?.statusCode) {
-              RmqConnection.channel.cancel(consumerTag);
-              return reject(parsedData);
-            }
-
-            const price = parsedData.price * data.quantity;
-            if (parsedData.quantity >= data.quantity) {
-              let order;
-              const orderExist = await Order.findOne({
-                productId: data.productId,
-                userId: data.userId,
-              });
-              if (orderExist) {
-                order = await Order.findByIdAndUpdate(
-                  orderExist.id,
-                  { $inc: { price, quantity: data.quantity } },
-                  { new: true }
-                );
-              } else
-                order = await Order.create({
-                  userId: data.userId,
-                  price,
-                  productId: data.productId,
-                  quantity: data.quantity,
-                });
-
-              resolve(order);
-            }
-            reject(
-              new AppError(
-                "Product can't be purchased at th moment",
-                HttpStatus.HTTP_UNPROCESSABLE_ENTITY
-              )
-            );
-            RmqConnection.channel.cancel(consumerTag);
-          } catch (error) {
-            RmqConnection.channel.cancel(consumerTag);
-            reject(error);
-          }
+      const price = product.price * data.quantity;
+      if (product.quantity >= data.quantity) {
+        let order;
+        const orderExist = await Order.findOne({
+          productId: data.productId,
+          userId: data.userId,
         });
-      });
-      return await result;
+        if (orderExist) {
+          order = await Order.findByIdAndUpdate(
+            orderExist.id,
+            { $inc: { price, quantity: data.quantity } },
+            { new: true }
+          );
+        } else
+          order = await Order.create({
+            userId: data.userId,
+            price,
+            productId: data.productId,
+            quantity: data.quantity,
+          });
+        return order;
+      } else
+        return new AppError(
+          "Product can't be purchased at th moment",
+          HttpStatus.HTTP_UNPROCESSABLE_ENTITY
+        );
     } catch (error) {
       return error;
     }
@@ -83,40 +67,25 @@ class OrderService {
         action: PRODUCTS,
       });
 
-      const result = new Promise((resolve, reject) => {
-        const consumerTag = `consumer_${userId}_${Date.now()}`;
-        RmqConnection.consume('VIEW_CART', (product) => {
-          try {
-            const products = JSON.parse(product);
-            if (products?.statusCode) {
-              RmqConnection.channel.cancel(consumerTag);
-              return reject(products);
-            }
+      const products = await this.handleConsumer('VIEW_CART', userId);
+      if (products?.statusCode) throw products;
 
-            const allCarts = orders.map((item) => {
-              const productItem = products.find(
-                (product) => product.id === item.productId
-              );
+      const allCarts = orders.map((item) => {
+        const productItem = products.find(
+          (product) => product.id === item.productId
+        );
 
-              return {
-                price: item.price,
-                quantity: item.quantity,
-                image: productItem.image,
-                product: productItem.name,
-                description: productItem.description,
-                productInStock: productItem.quantity,
-              };
-            });
-
-            resolve(allCarts);
-            RmqConnection.channel.cancel(consumerTag);
-          } catch (error) {
-            RmqConnection.channel.cancel(consumerTag);
-            return error;
-          }
-        });
+        return {
+          price: item.price,
+          cartId: item.id,
+          quantity: item.quantity,
+          image: productItem.image,
+          product: productItem.name,
+          description: productItem.description,
+          productInStock: productItem.quantity,
+        };
       });
-      return await result;
+      return allCarts;
     } catch (error) {
       return error;
     }
@@ -124,7 +93,7 @@ class OrderService {
 
   viewCart = async (cartId: string, userId: string) => {
     try {
-      if (!isValidObjectId) return notFoundError('Order');
+      if (!isValidObjectId(cartId)) return notFoundError('Order');
       const order = await Order.findOne({ _id: cartId, userId }, '-userId');
 
       await RmqConnection.sendToQueue('PRODUCT', {
@@ -132,34 +101,21 @@ class OrderService {
         action: PRODUCT,
       });
 
-      const result = new Promise((resolve, reject) => {
-        const consumerTag = `consumer_${cartId}_${Date.now()}`;
-        RmqConnection.consume('CART', (product) => {
-          try {
-            const productData = JSON.parse(product);
-            if (productData?.statusCode) {
-              RmqConnection.channel.cancel(consumerTag);
-              return reject(productData);
-            }
+      const productData = await this.handleConsumer('CART', userId);
+      if (productData?.statusCode) {
+        throw productData;
+      }
+      const cart = {
+        product: productData.name,
+        image: productData.image,
+        description: productData.description,
+        quantity: order.quantity,
+        price: order.price,
+        cartId: order.id,
+        productInStock: productData.quantity,
+      };
 
-            const cart = {
-              product: productData.name,
-              image: productData.image,
-              description: productData.description,
-              quantity: order.quantity,
-              price: order.price,
-              productInStock: productData.quantity,
-            };
-
-            resolve(cart);
-            RmqConnection.channel.cancel(consumerTag);
-          } catch (error) {
-            RmqConnection.channel.cancel(consumerTag);
-            return error;
-          }
-        });
-      });
-      return await result;
+      return cart;
     } catch (error) {
       return error;
     }
@@ -179,94 +135,95 @@ class OrderService {
         action: PRODUCT,
       });
 
-      const result = new Promise((resolve, reject) => {
-        const consumerTag = `consumer_${order.userId}_${Date.now()}`;
+      const product = await this.handleConsumer('CART', order.userId);
+      if (product?.statusCode) throw error;
 
-        RmqConnection.consume('CART', async (product) => {
-          try {
-            const parsedData = JSON.parse(product);
-            if (parsedData?.statusCode) {
-              RmqConnection.channel.cancel(consumerTag);
-              return reject(parsedData);
-            }
-
-            // Handle http request
-            if (data.quantity) {
-              if (parsedData.quantity >= data.quantity) {
-                const updatedCart = await Order.findByIdAndUpdate(
-                  cartId,
-                  { ...data, price: data.quantity * parsedData.product },
-                  { new: true }
-                );
-                return resolve(updatedCart);
-              } else
-                reject(
-                  new AppError(
-                    "Product can't be purchased at th moment",
-                    HttpStatus.HTTP_UNPROCESSABLE_ENTITY
-                  )
-                );
-            } else {
-              // handle payment service update
-              if (data.paymentInitialized)
-                await Order.findByIdAndUpdate(cartId, { data });
-            }
-            RmqConnection.channel.cancel(consumerTag);
-          } catch (error) {
-            RmqConnection.channel.cancel(consumerTag);
-            reject(error);
-          }
-        });
-      });
-      return await result;
+      // Handle http request
+      if (data.quantity) {
+        if (product.quantity >= data.quantity) {
+          const updatedCart = await Order.findByIdAndUpdate(
+            cartId,
+            { ...data, price: data.quantity * product.price },
+            { new: true }
+          );
+          return updatedCart;
+        } else
+          return new AppError(
+            "Product can't be purchased at th moment",
+            HttpStatus.HTTP_UNPROCESSABLE_ENTITY
+          );
+      }
     } catch (error) {
       return error;
     }
   };
 
+  updateCartPayment = async (
+    cartIds: string[],
+    userId: string,
+    data: IUpdateOrder
+  ) => {
+    try {
+      const orders = await Order.find({ _id: { $in: cartIds } });
+      const orderEl = orders.map((order) => {
+        return {
+          quantity: 0 - order.quantity,
+          productId: order.productId,
+        };
+      });
+
+      if (!orderEl.length) return;
+      await RmqConnection.sendToQueue('PRODUCT', {
+        data: orderEl,
+        action: UPDATE_PRODUCT_PAYMENT,
+      });
+
+      await Order.updateMany({ _id: { $in: cartIds } }, { $set: data });
+    } catch (error) {
+      throw error;
+    }
+  };
+
   payCart = async (cartIds: string[], userId: string) => {
     try {
+      cartIds.forEach(async (cart) => {
+        if (!isValidObjectId(cart)) {
+          return await RmqConnection.sendToQueue('PAYMENT_PRICE', {
+            price: 0,
+            action: PAYMENT,
+          });
+        }
+      });
       const carts = await Order.find({
         _id: { $in: cartIds },
         userId,
         isPaid: false,
       });
 
-      carts.forEach(async (cart) => {
-        await RmqConnection.sendToQueue('PRODUCT', {
-          productId: cart.productId,
-          action: PRODUCT,
+      if (!carts.length)
+        return await RmqConnection.sendToQueue('PAYMENT_PRICE', {
+          price: 0,
+          action: PAYMENT,
         });
-
-        return await new Promise((resolve, reject) => {
-          const consumerTag = `consumer_${userId}_${Date.now()}`;
-
-          RmqConnection.consume('CART', async (product) => {
-            try {
-              const parsedData = JSON.parse(product);
-              if (parsedData?.statusCode) {
-                RmqConnection.channel.cancel(consumerTag);
-                return reject(parsedData);
-              }
-
-              if (cart.productId === parsedData.id) {
-                if (parsedData.quantity >= cart.quantity) {
-                  await RmqConnection.sendToQueue('PAYMENT', {
-                    price: cart.quantity,
-                    action: PAYMENT,
-                  });
-                }
-              }
-              RmqConnection.channel.cancel(consumerTag);
-            } catch (error) {
-              RmqConnection.channel.cancel(consumerTag);
-              reject(error);
-            }
-          });
-        });
+      const productIds = carts.map((el) => el.productId);
+      await RmqConnection.sendToQueue('PRODUCT', {
+        action: PRODUCTS,
+        productIds,
       });
 
-      // i++;
+      const products = await this.handleConsumer('VIEW_CART', userId);
+      if (products?.statusCode) throw products;
+
+      if (carts.length === products.length) {
+        const verifyCart = carts.map((el, i) => {
+          if (el.productId === products[i].id)
+            if (products[i].quantity >= el.quantity)
+              return { cart: el.id, product: el.productId, price: el.price };
+        });
+        await RmqConnection.sendToQueue('PAYMENT_PRICE', {
+          verifyCart,
+        });
+      }
     } catch (error) {}
   };
 
@@ -278,33 +235,20 @@ class OrderService {
         action: PRODUCT,
       });
 
-      const result = new Promise((resolve, reject) => {
-        const consumerTag = `consumer_${order.userId}_${Date.now()}`;
+      const product = await this.handleConsumer('CART', order.userId);
+      if (product?.statusCode) throw product;
 
-        RmqConnection.consume('CART', async (product) => {
-          try {
-            const parsedData = JSON.parse(product);
-            if (parsedData?.statusCode) {
-              RmqConnection.channel.cancel(consumerTag);
-              return reject(parsedData);
-            }
-
-            RmqConnection.sendToQueue('PRODUCT', {
-              quantity: order.quantity + parsedData.quantity,
-              productId: order.productId,
-              action: UPDATE_PRODUCT,
-            });
-
-            await Order.findByIdAndDelete(cartId);
-
-            RmqConnection.channel.cancel(consumerTag);
-          } catch (error) {
-            RmqConnection.channel.cancel(consumerTag);
-            reject(error);
-          }
+      if (order.paymentInitialized) {
+        await RmqConnection.sendToQueue('PRODUCT', {
+          quantity: order.quantity + product.quantity,
+          productId: order.productId,
+          action: UPDATE_PRODUCT,
         });
-      });
-      return await result;
+      }
+
+      await Order.findByIdAndDelete(cartId);
+
+      return;
     } catch (error) {
       return error;
     }
@@ -318,6 +262,15 @@ class OrderService {
       });
 
       if (!orders.length) return;
+
+      const orderEl = orders.map((order) => ({
+        quantity:  order.quantity,
+        productId: order.productId,
+      }));
+      await RmqConnection.sendToQueue('PRODUCT', {
+        action: UPDATE_PRODUCT_PAYMENT,
+        data: orderEl,
+      });
 
       orders.forEach(async (order) => {
         await RmqConnection.sendToQueue('PRODUCT', {
@@ -354,6 +307,34 @@ class OrderService {
     } catch (error) {
       return error;
     }
+  };
+
+  private readonly handleConsumer = async (
+    queue: Queue,
+    tag: string
+  ): Promise<any> => {
+    return await new Promise((resolve, reject) => {
+      const consumerTag = `consumer_${tag}_${Date.now()}`;
+
+      RmqConnection.consume(
+        queue,
+        async (data) => {
+          try {
+            const parsedData = JSON.parse(data);
+            if (parsedData?.statusCode) {
+              RmqConnection.channel.cancel(consumerTag);
+              return reject(parsedData);
+            }
+            resolve(parsedData);
+            RmqConnection.channel.cancel(consumerTag);
+          } catch (error) {
+            RmqConnection.channel.cancel(consumerTag);
+            reject(error);
+          }
+        },
+        consumerTag
+      );
+    });
   };
 }
 

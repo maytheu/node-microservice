@@ -1,4 +1,9 @@
-import { PRODUCT, PRODUCTS, UPDATE_PRODUCT } from '@app/event';
+import {
+  PRODUCT,
+  PRODUCTS,
+  UPDATE_PRODUCT,
+  UPDATE_PRODUCT_PAYMENT,
+} from '@app/event';
 import productService from './product.service';
 
 export const handleIncomingProductQueue = async (data: string) => {
@@ -16,6 +21,9 @@ export const handleIncomingProductQueue = async (data: string) => {
         { quantity: parsedData.quantity },
         parsedData.productId
       );
+    }
+    if (parsedData.action === UPDATE_PRODUCT_PAYMENT) {
+      await productService.updateProductPayment(parsedData.data);
     }
   } catch (error) {
     console.error(`Error While Parsing the message`);

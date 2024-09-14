@@ -9,7 +9,7 @@ import { productValidate } from './product.validate';
 import { MongoConnect } from '@app/core';
 import App from './product.app';
 import { RmqConnection } from '@app/event';
-import { handleIncomingProductQueue } from './product.consume';
+import { handleIncomingProductQueue } from './product.event';
 
 const app = App.app;
 
