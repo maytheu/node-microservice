@@ -6,7 +6,7 @@
 import 'dotenv/config';
 import * as path from 'path';
 import { productValidate } from './product.validate';
-import { MongoConnect } from '@app/core';
+import { MongoConnect, PageRefresh } from '@app/core';
 import App from './product.app';
 import { RmqConnection } from '@app/event';
 import { handleIncomingProductQueue } from './product.event';
@@ -18,6 +18,7 @@ const port = productValidate.PORT;
 const startServer = async () => {
   await MongoConnect.connectMongo(productValidate.MONGO_URL);
   await RmqConnection.connect();
+  // new PageRefresh('').performJob;
   await RmqConnection.consume('PRODUCT', handleIncomingProductQueue);
   app.listen(port, () =>
     console.log(`Product service started on port ${port}`)
