@@ -11,6 +11,10 @@ import hpp from 'hpp';
 import cors from 'cors';
 import router from './order.route';
 import path from 'path';
+import { orderValidate } from './order.validate';
+import { readFileSync } from 'fs';
+import YAML from 'yaml';
+import swaggerUi from 'swagger-ui-express';
 
 class App {
   app: Application;
@@ -19,6 +23,13 @@ class App {
     max: 500,
     message: 'Too many request',
   });
+
+  swaggerDir = orderValidate.isDev
+    ? path.join(__dirname, '../../../apps/order/src/order.swagger.yaml')
+    : path.join(__dirname, 'order.swagger.yaml');
+
+  fileSync = readFileSync(this.swaggerDir, 'utf-8');
+  swaggerDocument = YAML.parse(this.fileSync);
 
   constructor() {
     this.app = express();
@@ -45,6 +56,12 @@ class App {
    */
   private route() {
     this.app.use('/api/v1/order', router);
+
+    this.app.use(
+      '/api/v1/order/docs',
+      swaggerUi.serve,
+      swaggerUi.setup(this.swaggerDocument)
+    );
   }
 
   /**

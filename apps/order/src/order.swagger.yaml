@@ -1,108 +1,23 @@
 openapi: 3.0.0
 info:
-  title: User Uservice API
-  description: ser service API collection.
+  title: Order service API
+  description: Order service API collection.
   version: 1.0.0
 
 servers:
-  - url: http://localhost:3003/api/v1/user
-    description: Local Server endpoint for user service
-  - url: https://.../api/v1/user
-    description: Server endpoint for user service
+  - url: http://localhost:3001/api/v1/order
+    description: Local Server endpoint for order service
+  - url: https://.../api/v1/order
+    description: Server endpoint for order service
 
 paths:
   /:
     get:
       security:
         - bearerAuth: []
-      summary: User profile
-      description: View user details
-      tags: ['user']
-      responses:
-        '200':
-          description: ok
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message: 
-                    type: string
-                  data: 
-                    type: object
-                    properties:
-                      name: 
-                        type: string
-                        example: Test
-                      email: 
-                        type: string
-                        exampe: test@user.com
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Unauthorize'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalServer'
-
-    put:
-      security:
-        - bearerAuth: []
-      summary: User profile
-      description: View user details
-      tags: ['user']
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-      responses:
-        '200':
-          description: ok
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Unauthorize'
-        '422':
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Validation'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalServer'
-
-  /login:
-    post:
-      summary: User login
-      description: User login credentiails
-      tags: ['user']
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  example: test@user.com
-                password:
-                  type: string
-                  example: 123456
+      summary: Orders
+      description: View all user orders
+      tags: ['order']
       responses:
         '200':
           description: ok
@@ -114,16 +29,55 @@ paths:
                   message:
                     type: string
                   data:
-                    type: object
-                    properties:
-                      token: 
-                        type: string
-        '422':
-          description: Validation error
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Validation'
+                $ref: '#/components/schemas/Unauthorize'
+        '500':
+          description: fail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServer'
+
+  /single/{orderId}:
+    get:
+      summary: view order details
+      description: View order by id
+      tags: ['order']
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Order'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorize'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
         '500':
           description: Internal server error
           content:
@@ -131,26 +85,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/InternalServer'
 
-  /register:
+  /{productId}:
     post:
-      summary: Register
-      description: Create new user
-      tags: ['user']
+      summary: Add product
+      description: Add selected product id to cart
+      tags: ['order']
+      parameters:
+        - name: productId
+          in: path
+          required: true
       requestBody:
         content:
           application/json:
             schema:
               type: object
               properties:
-                email:
-                  type: string
-                  example: test@user.com
-                password:
-                  type: string
-                  example: 123456
-                name:
-                  type: string
-                  example: Test
+                quantity:
+                  type: number
+                  example: 2
       responses:
         '201':
           description: created
@@ -161,21 +113,16 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Account created successfully
                   data:
                     type: object
                     properties:
-                      user:
-                        type: object
-                        properties:
-                          name:
-                            type: string
-                            example: Test
-                          email:
-                            type: string
-                            example: test@user.com
-                      token:
+                      userId:
                         type: string
+                      quantity:
+                        type: number
+                        example: 2
+                      paymemntInitialized:
+                        type: boolean
         '422':
           description: Validation error
           content:
@@ -189,25 +136,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/InternalServer'
 
-  /update-password:
+  /update/{orderId}:
     put:
       security:
         - bearerAuth: []
-      summary: Update user password
-      description: Change user password
-      tags: ['user']
+      summary: Update cart
+      description: Change cart quanty based on cart id
+      tags: ['order']
+      parameters:
+        - name: orderId
+          in: path
+          required: true
       requestBody:
         content:
           application/json:
             schema:
               type: object
               properties:
-                oldPassword:
-                  type: string
-                  example: 123456
-                newPassword:
-                  type: string
-                  example: 654321
+                quantity:
+                  type: number
+                  example: 2
       responses:
         '200':
           description: ok
@@ -237,15 +185,26 @@ paths:
 # Reusable components
 components:
   schemas:
-    User:
+    Order:
       type: object
       properties:
-        name:
+        price:
+          type: number
+          example: 1000
+        cartId:
           type: string
-          example: Test user
-        email:
+        quantity:
+          type: number
+          example: 5
+        image:
           type: string
-          example: test@user.com
+        product:
+          type: string
+          example: product name
+        description:
+          type: string
+        productInStock:
+          type: number
 
     Validation:
       type: object

@@ -11,8 +11,19 @@ import hpp from 'hpp';
 import cors from 'cors';
 import router from './payment.route';
 import path from 'path';
+import { paymentValidate } from './payment.validation';
+import { readFileSync } from 'fs';
+import YAML from 'yaml';
+import swaggerUi from 'swagger-ui-express';
 
 class App {
+  swaggerDir = paymentValidate.isDev
+    ? path.join(__dirname, '../../../apps/payment/src/payment.swagger.yaml')
+    : path.join(__dirname, 'payment.swagger.yaml');
+
+  fileSync = readFileSync(this.swaggerDir, 'utf-8');
+  swaggerDocument = YAML.parse(this.fileSync);
+
   app: Application;
   limiter = rateLimit({
     windowMs: 100 * 60 * 1000,
@@ -45,6 +56,11 @@ class App {
    */
   private route() {
     this.app.use('/api/v1/payment', router);
+    this.app.use(
+      '/api/v1/payment/docs',
+      swaggerUi.serve,
+      swaggerUi.setup(this.swaggerDocument)
+    );
   }
 
   /**

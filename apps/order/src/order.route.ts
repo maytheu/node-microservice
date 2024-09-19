@@ -4,11 +4,11 @@ import orderController from './order.controller';
 
 const orderRouter = Router();
 
-orderRouter.get('/docs', (req: Request, res: Response) => {
-    return res.redirect(
-      'https://documenter.getpostman.com/view/8279131/2sAXqp7htd'
-    );
-  });
+// orderRouter.get('/docs', (req: Request, res: Response) => {
+//     return res.redirect(
+//       'https://documenter.getpostman.com/view/8279131/2sAXqp7htd'
+//     );
+//   });
   
 orderRouter.post('/:productId', isAuthenticated, orderController.addToCart);
 orderRouter.get('/single/:orderId', isAuthenticated, orderController.viewCart);

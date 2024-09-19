@@ -1,158 +1,32 @@
 openapi: 3.0.0
 info:
-  title: User Uservice API
-  description: ser service API collection.
+  title: Payment service API
+  description: Payment service API collection.
   version: 1.0.0
 
 servers:
-  - url: http://localhost:3003/api/v1/user
-    description: Local Server endpoint for user service
-  - url: https://.../api/v1/user
-    description: Server endpoint for user service
+  - url: http://localhost:3000/api/v1/payment
+    description: Local Server endpoint for order service
+  - url: https://.../api/v1/payment
+    description: Server endpoint for order service
 
 paths:
   /:
-    get:
-      security:
-        - bearerAuth: []
-      summary: User profile
-      description: View user details
-      tags: ['user']
-      responses:
-        '200':
-          description: ok
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message: 
-                    type: string
-                  data: 
-                    type: object
-                    properties:
-                      name: 
-                        type: string
-                        example: Test
-                      email: 
-                        type: string
-                        exampe: test@user.com
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Unauthorize'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalServer'
-
-    put:
-      security:
-        - bearerAuth: []
-      summary: User profile
-      description: View user details
-      tags: ['user']
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-      responses:
-        '200':
-          description: ok
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Unauthorize'
-        '422':
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Validation'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalServer'
-
-  /login:
     post:
-      summary: User login
-      description: User login credentiails
-      tags: ['user']
+      summary: Initialize Payment
+      description: Connect with paystack to make payment, accept the same parameters as verif API
+      tags: ['payment']
       requestBody:
         content:
           application/json:
             schema:
               type: object
               properties:
-                email:
+                cart:
                   type: string
-                  example: test@user.com
-                password:
-                  type: string
-                  example: 123456
+                  example: cartId1,  cartId2
       responses:
         '200':
-          description: ok
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      token: 
-                        type: string
-        '422':
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Validation'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalServer'
-
-  /register:
-    post:
-      summary: Register
-      description: Create new user
-      tags: ['user']
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  example: test@user.com
-                password:
-                  type: string
-                  example: 123456
-                name:
-                  type: string
-                  example: Test
-      responses:
-        '201':
           description: created
           content:
             application/json:
@@ -161,60 +35,12 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Account created successfully
                   data:
                     type: object
                     properties:
-                      user:
-                        type: object
-                        properties:
-                          name:
-                            type: string
-                            example: Test
-                          email:
-                            type: string
-                            example: test@user.com
-                      token:
+                      url:
                         type: string
-        '422':
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Validation'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalServer'
-
-  /update-password:
-    put:
-      security:
-        - bearerAuth: []
-      summary: Update user password
-      description: Change user password
-      tags: ['user']
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                oldPassword:
-                  type: string
-                  example: 123456
-                newPassword:
-                  type: string
-                  example: 654321
-      responses:
-        '200':
-          description: ok
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
+                        example: paystack url to make payment
         '401':
           description: Unauthorized
           content:
@@ -234,19 +60,64 @@ paths:
               schema:
                 $ref: '#/components/schemas/InternalServer'
 
+  /verify:
+    post:
+      summary: Payment details
+      description: View total amount to be made, it accepts cartId, for multiple carts, pass cartid as string seperated by comma
+      tags: ['payment']
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cart:
+                  type: string
+                  example: cartId1,  cartId2
+      responses:
+        '200':
+          description: created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      totalAmount:
+                        type: number
+                        example: 1000
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorize'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Validation'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServer'
+
+  /webhook:
+    post:
+      summary: paystack webhook
+      description: Can only be access by paystack
+      tags: ['payment']
+
 # Reusable components
 components:
   schemas:
-    User:
-      type: object
-      properties:
-        name:
-          type: string
-          example: Test user
-        email:
-          type: string
-          example: test@user.com
-
     Validation:
       type: object
       properties:
