@@ -10,9 +10,20 @@ import helmet from 'helmet';
 import hpp from 'hpp';
 import cors from 'cors';
 import router from './user.routes';
+import swaggerUi from 'swagger-ui-express';
+import { readFileSync } from 'fs';
 import path from 'path';
+import YAML from 'yaml';
+import { userValidate } from './user.validate';
 
 class App {
+  swaggerDir = userValidate.isDev
+    ? path.join(__dirname, '../../../apps/user/src/user.swagger.yaml')
+    : path.join(__dirname, 'user.swagger.yaml');
+
+  fileSync = readFileSync(this.swaggerDir, 'utf-8');
+  swaggerDocument = YAML.parse(this.fileSync);
+
   app: Application;
   limiter = rateLimit({
     windowMs: 100 * 60 * 1000,
@@ -45,6 +56,11 @@ class App {
    */
   private route() {
     this.app.use('/api/v1/user', router);
+    this.app.use(
+      '/api/v1/user/docs',
+      swaggerUi.serve,
+      swaggerUi.setup(this.swaggerDocument)
+    );
   }
 
   /**

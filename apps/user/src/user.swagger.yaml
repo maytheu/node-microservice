@@ -1,0 +1,368 @@
+openapi: 3.0.0
+info:
+  title: User service API
+  description: ser service API collection.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3003/api/v1/user
+    description: Local Server endpoint for user service
+  - url: https://.../api/v1/user
+    description: Server endpoint for user service
+
+paths:
+  /:
+    get:
+      security:
+        - bearerAuth: []
+      summary: User profile
+      description: View user details
+      tags: ['user']
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: 
+                    type: string
+                  data: 
+                    type: object
+                    properties:
+                      name: 
+                        type: string
+                        example: Test
+                      email: 
+                        type: string
+                        exampe: test@user.com
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorize'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServer'
+
+    put:
+      security:
+        - bearerAuth: []
+      summary: User profile
+      description: View user details
+      tags: ['user']
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: ok
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorize'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Validation'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServer'
+
+  /login:
+    post:
+      summary: User login
+      description: User login credentiails
+      tags: ['user']
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: test@user.com
+                password:
+                  type: string
+                  example: 123456
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      token: 
+                        type: string
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Validation'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServer'
+
+  /register:
+    post:
+      summary: Register
+      description: Create new user
+      tags: ['user']
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: test@user.com
+                password:
+                  type: string
+                  example: 123456
+                name:
+                  type: string
+                  example: Test
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Account created successfully
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            example: Test
+                          email:
+                            type: string
+                            example: test@user.com
+                      token:
+                        type: string
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Validation'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServer'
+
+  /update-password:
+    put:
+      security:
+        - bearerAuth: []
+      summary: Update user password
+      description: Change user password
+      tags: ['user']
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  example: 123456
+                newPassword:
+                  type: string
+                  example: 654321
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorize'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Validation'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServer'
+
+# Reusable components
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Test user
+        email:
+          type: string
+          example: test@user.com
+
+    Validation:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        error:
+          type: object
+          properties:
+            statusCode:
+              type: number
+              example: 422
+            status:
+              type: string
+              example: fail
+            error:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: Validation error message
+
+        message:
+          type: string
+          example: Request validation failed
+
+    Duplicate:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        error:
+          type: object
+          properties:
+            statusCode:
+              type: number
+              example: 409
+            status:
+              type: string
+              example: fail
+            error:
+              type: object
+        message:
+          type: string
+
+    NotFound:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        error:
+          type: object
+          properties:
+            statusCode:
+              type: number
+              example: 404
+            status:
+              type: string
+              example: fail
+            error:
+              type: object
+        message:
+          type: string
+
+    Unauthorize:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        error:
+          type: object
+          properties:
+            statusCode:
+              type: number
+              example: 401
+            status:
+              type: string
+              example: fail
+            error:
+              type: object
+              properties:
+                message:
+                  type: string
+        message:
+          type: string
+          example: Unauthorized user
+
+    InternalServer:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        error:
+          type: object
+          properties:
+            statusCode:
+              type: number
+              example: 500
+            status:
+              type: string
+              example: fail
+            error:
+              type: object
+              properties:
+                message:
+                  type: string
+        message:
+          type: string
+          example: Internal server error
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
