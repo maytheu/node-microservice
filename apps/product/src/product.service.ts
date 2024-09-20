@@ -35,7 +35,7 @@ class ProductService {
   };
 
   allProduct = async (
-    query: { name: string; description: string },
+    query: { name: string; },
     filter: string,
     limit: number,
     page: number
@@ -44,8 +44,8 @@ class ProductService {
       const objQuery: any = {};
       objQuery.isDeleted = false;
       if (query.name) objQuery.name = { $regex: query.name, $options: 'i' };
-      if (query.description)
-        objQuery.description = { $regex: query.description, $options: 'i' };
+      // if (query.description)
+      //   objQuery.description = { $regex: query.description, $options: 'i' };
 
       if (filter) {
         let filters = filter.replace(

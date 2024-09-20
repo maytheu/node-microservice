@@ -4,11 +4,11 @@ import productController from './product.controller';
 
 const productRouter = Router();
 
-productRouter.get('/docs', (req: Request, res: Response) => {
-  return res.redirect(
-    'https://documenter.getpostman.com/view/8279131/2sAXqp7htd'
-  );
-});
+// productRouter.get('/docs', (req: Request, res: Response) => {
+//   return res.redirect(
+//     'https://documenter.getpostman.com/view/8279131/2sAXqp7htd'
+//   );
+// });
 productRouter
   .route('/')
   .post(isAuthenticated, isAuthorized, productController.newProduct)

@@ -6,9 +6,9 @@ info:
 
 servers:
   - url: http://localhost:3000/api/v1/payment
-    description: Local Server endpoint for order service
+    description: Local Server endpoint for payment service
   - url: https://.../api/v1/payment
-    description: Server endpoint for order service
+    description: Server endpoint for payment service
 
 paths:
   /:

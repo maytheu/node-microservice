@@ -11,8 +11,19 @@ import hpp from 'hpp';
 import cors from 'cors';
 import router from './product.route';
 import path from 'path';
+import { productValidate } from './product.validate';
+import swaggerUi from 'swagger-ui-express';
+import { readFileSync } from 'fs';
+import YAML from 'yaml';
 
 class App {
+  swaggerDir = productValidate.isDev
+    ? path.join(__dirname, '../../../apps/product/src/product.swagger.yaml')
+    : path.join(__dirname, 'product.swagger.yaml');
+
+  fileSync = readFileSync(this.swaggerDir, 'utf-8');
+  swaggerDocument = YAML.parse(this.fileSync);
+
   app: Application;
   limiter = rateLimit({
     windowMs: 100 * 60 * 1000,
@@ -44,6 +55,11 @@ class App {
    * Handle express route
    */
   private route() {
+    this.app.use(
+      '/api/v1/product/docs',
+      swaggerUi.serve,
+      swaggerUi.setup(this.swaggerDocument)
+    );
     this.app.use('/api/v1/product', router);
   }
 

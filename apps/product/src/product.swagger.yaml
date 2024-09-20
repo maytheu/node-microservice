@@ -1,0 +1,434 @@
+openapi: 3.0.0
+info:
+  title: Product service API
+  description: Product service API collection.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3002/api/v1/product
+    description: Local Server endpoint for product service
+  - url: https://.../api/v1/product
+    description: Server endpoint for product service
+
+paths:
+  /:
+    get:
+      summary: Products
+      description: View all product, product can be filtered based on query parameters
+      tags: ['product']
+      parameters:
+        - name: name
+          in: query
+          description: Filter product by name
+        - name: filter
+          in: query
+          description: Filter product by price/quantity filter=price>=price, quantity=100
+        - name: limit
+          in: query
+          description: Total number of product to be returned in a page
+        - name: page
+          in: query
+          description: page number
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+        '500':
+          description: fail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServer'
+
+    post:
+      security:
+        - bearerAuth: []
+      summary: create new product
+      description: Only admin can create new product
+      tags: ['product']
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductData'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product created successfully
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthenticate'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Validation'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServer'
+
+  /{id}:
+    get:
+      summary: view product
+      description: view product details
+      tags: ['product']
+      parameters:
+        - name: id
+          in: path
+          required: true
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product created successfully
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '404':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServer'
+
+    put:
+      security:
+        - bearerAuth: []
+      summary: Edit existing product
+      description: Only admin can edit existing product
+      parameters:
+        - name: id
+          in: path
+          required: true      
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EditProductData'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product updated successfully
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthenticate'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '404':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Validation'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServer'
+
+    delete:
+      security:
+        - bearerAuth: []
+      summary: Delete product
+      description: Only admin can delete product
+      tags: ['product']
+      parameters:
+        - name: id
+          in: path
+          required: true
+      responses: 
+        '204':
+          description: deleted
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthenticate'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '404':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServer'
+
+
+# Reusable components
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: product name
+        quantity:
+          type: number
+          example: 5
+        price:
+          type: number
+          example: 1000
+        image:
+          type: string
+
+    ProductData:
+      type: object
+      properties:
+        name:
+          type: string
+          example: new product
+        price:
+          type: number
+          example: 100
+        quantity:
+          type: number
+          example: 100
+        image:
+          type: string
+          format: binary
+      required:
+        - name
+        - price
+        - description
+        - quantity
+        - image
+
+    EditProductData:
+      type: object
+      properties:
+        name:
+          type: string
+          example: new product
+        price:
+          type: number
+          example: 100
+        quantity:
+          type: number
+          example: 100
+        image:
+          type: string
+          format: binary
+
+    Validation:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        error:
+          type: object
+          properties:
+            statusCode:
+              type: number
+              example: 422
+            status:
+              type: string
+              example: fail
+            error:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: Validation error message
+
+        message:
+          type: string
+          example: Request validation failed
+
+    Duplicate:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        error:
+          type: object
+          properties:
+            statusCode:
+              type: number
+              example: 409
+            status:
+              type: string
+              example: fail
+            error:
+              type: object
+        message:
+          type: string
+
+    NotFound:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        error:
+          type: object
+          properties:
+            statusCode:
+              type: number
+              example: 404
+            status:
+              type: string
+              example: fail
+            error:
+              type: object
+        message:
+          type: string
+
+    Unauthenticate:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        error:
+          type: object
+          properties:
+            statusCode:
+              type: number
+              example: 401
+            status:
+              type: string
+              example: fail
+            error:
+              type: object
+              properties:
+                message:
+                  type: string
+        message:
+          type: string
+          example: Unauthenticated user
+
+    Unauthorized:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        error:
+          type: object
+          properties:
+            statusCode:
+              type: number
+              example: 403
+            status:
+              type: string
+              example: fail
+            error:
+              type: object
+              properties:
+                message:
+                  type: string
+        message:
+          type: string
+          example: Unauthorized user
+
+    InternalServer:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        error:
+          type: object
+          properties:
+            statusCode:
+              type: number
+              example: 500
+            status:
+              type: string
+              example: fail
+            error:
+              type: object
+              properties:
+                message:
+                  type: string
+        message:
+          type: string
+          example: Internal server error
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

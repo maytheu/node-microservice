@@ -78,13 +78,12 @@ class ProductController extends Controller {
 
   allProduct: RequestHandler = async (req, res, next) => {
     try {
-      const { name, description, filter, limit, page } = req.query;
+      const { name,  filter, limit, page } = req.query;
 
       const productLimit = +limit || 10;
       const productPage = +page || 1;
       const query = {
         name: name && `${name}`,
-        description: description && `${description}`,
       };
       const price_quantity = `${filter}`;
 
