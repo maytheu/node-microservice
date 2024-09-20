@@ -87,6 +87,8 @@ paths:
 
   /{productId}:
     post:
+      security:
+        - bearerAuth: []
       summary: Add product
       description: Add selected product id to cart
       tags: ['order']
