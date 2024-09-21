@@ -57,7 +57,7 @@ class App {
   private route() {
     this.app.use('/api/v1/user', router);
     this.app.use(
-      '/api/v1/user/docs',
+      '/',
       swaggerUi.serve,
       swaggerUi.setup(this.swaggerDocument)
     );

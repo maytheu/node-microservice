@@ -16,7 +16,7 @@ const port = paymentValidate.PORT;
 
 const startServer = async () => {
   await MongoConnect.connectMongo(paymentValidate.MONGO_URL);
-  // new PageRefresh('').performJob;
+  new PageRefresh('https://payment-service-8scu.onrender.com').performJob;
   await RmqConnection.connect()
   app.listen(port, () => console.log(`Payment Service started on port ${port}`));
 };

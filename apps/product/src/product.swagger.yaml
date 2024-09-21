@@ -7,7 +7,7 @@ info:
 servers:
   - url: http://localhost:3002/api/v1/product
     description: Local Server endpoint for product service
-  - url: https://.../api/v1/product
+  - url: https://product-service-g8u7.onrender.com/api/v1/product
     description: Server endpoint for product service
 
 paths:
@@ -142,7 +142,7 @@ paths:
       parameters:
         - name: id
           in: path
-          required: true      
+          required: true
       requestBody:
         content:
           multipart/form-data:
@@ -202,7 +202,7 @@ paths:
         - name: id
           in: path
           required: true
-      responses: 
+      responses:
         '204':
           description: deleted
         '401':

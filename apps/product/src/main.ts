@@ -18,7 +18,7 @@ const port = productValidate.PORT;
 const startServer = async () => {
   await MongoConnect.connectMongo(productValidate.MONGO_URL);
   await RmqConnection.connect();
-  // new PageRefresh('').performJob;
+  new PageRefresh('https://product-service-g8u7.onrender.com').performJob;
   await RmqConnection.consume('PRODUCT', handleIncomingProductQueue);
   app.listen(port, () =>
     console.log(`Product service started on port ${port}`)

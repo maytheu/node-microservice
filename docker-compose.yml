@@ -1,0 +1,51 @@
+version: '3.8'
+services:
+  order:
+    container_name: order
+    build:
+      context: ./
+      dockerfile: ./apps/order/dockerfile
+    ports:
+      - 3001:3001
+    env_file:
+      - .env
+      - ./apps/order/.env
+    depends_on:
+      - product
+
+  payment:
+    container_name: payment
+    build:
+      context: ./
+      dockerfile: ./apps/payment/dockerfile
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+      - ./apps/payment/.env
+    depends_on:
+      - order
+      - product
+
+  product:
+    container_name: product
+    build:
+      context: ./
+      dockerfile: ./apps/product/dockerfile
+    ports:
+      - 3002:3002
+    env_file:
+      - .env
+      - ./apps/product/.env
+
+  user:
+    container_name: user
+    build:
+      context: ./
+      dockerfile: ./apps/user/dockerfile
+    ports:
+      - 3003:3003
+    env_file:
+      - .env
+      - ./apps/user/.env
+

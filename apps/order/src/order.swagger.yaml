@@ -7,7 +7,7 @@ info:
 servers:
   - url: http://localhost:3001/api/v1/order
     description: Local Server endpoint for order service
-  - url: https://.../api/v1/order
+  - url: https://order-service-zxh4.onrender.com/api/v1/order
     description: Server endpoint for order service
 
 paths:

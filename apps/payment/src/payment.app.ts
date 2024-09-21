@@ -55,12 +55,12 @@ class App {
    * Handle express route
    */
   private route() {
-    this.app.use('/api/v1/payment', router);
     this.app.use(
-      '/api/v1/payment/docs',
+      '/',
       swaggerUi.serve,
       swaggerUi.setup(this.swaggerDocument)
-    );
+    );    this.app.use('/api/v1/payment', router);
+
   }
 
   /**

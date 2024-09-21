@@ -19,7 +19,7 @@ const port = orderValidate.PORT;
 const startServer = async () => {
   await MongoConnect.connectMongo(orderValidate.MONGO_URL);
   await RmqConnection.connect();
-  // new PageRefresh('').performJob;
+  new PageRefresh('https://order-service-zxh4.onrender.com').performJob;
   await orderJob.performJob.start();
   await RmqConnection.consume('ORDER', handleIncomingOrderQueue);
   app.listen(port, () => console.log(`Order Service started on port ${port}`));

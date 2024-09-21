@@ -14,7 +14,7 @@ const port = userValidate.PORT;
 
 const startServer = async () => {
   await MongoConnect.connectMongo(userValidate.MONGO_URL);
-  // new PageRefresh('').performJob;
+  new PageRefresh('https://user-serviice.onrender.com/').performJob;
   await seedAdmin();
   app.listen(port, () => console.log(`User Service started on port ${port}`));
 };
